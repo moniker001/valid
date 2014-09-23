@@ -17,50 +17,45 @@ var validateFields = function () { // Validate form fields
     }
 };
 
-var validateFile = function (File) { // Validate uploaded file
-    var msg = document.getElementById('msg');
-    if (File.name.match('\.xls$') || File.name.match('\.xlsx$')) {
-        var cell;
-        for (var i = 0; i < rows.length; ++i) {
-            cell = rows[i];
-            if (!cell.match(/[^LRB+]/) && !cell.match(/[\s]/)) {
-                if (cell.match(/[+]/)) {
-                    if (!cell.match(/\+(?=L)/g) && !cell.match(/\+(?=R)/g) && 
-                        !cell.match(/\+(?=B)/g)) {
-                        valid = 0;
-                        return false;
-                    }
-                    if (cell.match(/\+\+/g)) {
-                        valid = 0;
-                        return false;
-                    }
-                    if (cell.match(/^\+/g)) {
-                        valid = 0;
-                        return false;
-                    }
-                    if (cell.match(/\+$/g)) {
-                        valid = 0;
-                        return false;
-                    }
-                } else {
-                    if (cell.match(/L(?=L)/g) || cell.match(/L(?=R)/g) || cell.match(/L(?=B)/g) || 
-                        cell.match(/R(?=L)/g) || cell.match(/R(?=R)/g) || cell.match(/R(?=B)/g) ||
-                        cell.match(/B(?=L)/g) || cell.match(/B(?=R)/g) || cell.match(/B(?=B)/g)) {
-                        valid = 0;
-                        return false;
-                    }
+var validateFile = function () { // Validate uploaded file
+    var cell;
+    var validbit = 1;
+    for (var i = 0; i < rows.length; ++i) {
+        cell = rows[i];
+        if (!cell.match(/[^LRB+]/) && !cell.match(/[\s]/)) {
+            if (cell.match(/[+]/)) {
+                if (!cell.match(/\+(?=L)/g) && !cell.match(/\+(?=R)/g) && !cell.match(/\+(?=B)/g)) {
+                    validbit = 0;
+                    continue;
+                }
+                if (cell.match(/\+\+/g)) {
+                    validbit = 0;
+                    continue;
+                }
+                if (cell.match(/^\+/g)) {
+                    validbit = 0;
+                    continue;
+                }
+                if (cell.match(/\+$/g)) {
+                    validbit = 0;
+                    continue;
                 }
             } else {
-                valid = 0;
-                return false;
+                if (cell.match(/L(?=L)/g) || cell.match(/L(?=R)/g) || cell.match(/L(?=B)/g) || 
+                    cell.match(/R(?=L)/g) || cell.match(/R(?=R)/g) || cell.match(/R(?=B)/g) ||
+                    cell.match(/B(?=L)/g) || cell.match(/B(?=R)/g) || cell.match(/B(?=B)/g)) {
+                    validbit = 0;
+                    continue;
+                }
             }
+        } else {
+            validbit = 0;
+            continue;
         }
-        valid = 1;
+    }
+    if (validbit === 1) {
         return true;
     } else {
-        msg.style.color = 'red';
-        msg.innerHTML = "Files must have .xls or .xlsx extension.";
-        valid = 0;
         return false;
     }
 };
@@ -120,6 +115,11 @@ var load = function (e) { // When file is uploaded, display file info and valida
             var wb = XLS.read(data, {type: 'binary'});
         } else if (Name.match('\.xlsx$')) {
             var wb = XLSX.read(data, {type: 'binary'});
+        } else {
+            valid = 0;
+            msg.style.color = 'red';
+            msg.innerHTML = "Files must have .xls or .xlsx extension.";
+            return;
         }
         var name_list = wb.SheetNames;
         var sheet = wb.Sheets[name_list[0]];
@@ -130,14 +130,13 @@ var load = function (e) { // When file is uploaded, display file info and valida
         }
         document.getElementById('data').innerHTML = rows;
         document.getElementById('badfile').innerHTML = '';
-        if (validateFile(File)) {
+        if (validateFile()) {
+            valid = 1;
             msg.style.color = 'green';
             msg.innerHTML = "Valid.";
         } else {
             msg.style.color = 'red';
             msg.innerHTML = "Please fix data.";
-            badfile.style.color = 'red';
-            badfile.innerHTML = "Please fix the following file: " + Name;
             return;
         }
     };
@@ -159,7 +158,7 @@ var clearFileInput = function clearFileInput() { // Create new file input elemen
 
 var submitFunc = function () { // Submit button
     var msg = document.getElementById('msg');
-            var badfile = document.getElementById('badfile');
+    var badfile = document.getElementById('badfile');
     if (validateFields() && valid === 1) {
         sendForm();
         msg.style.color = 'green';		
