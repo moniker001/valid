@@ -1,3 +1,7 @@
+
+
+
+
 (function () { // Validate uploaded file
 
     var parse = require('minimist');
@@ -83,7 +87,8 @@
             return false;
         };
     };
-    validateFile();
-    module.exports = validateFile;
+    
+    module.exports = validateFile();
 
 }).call(this);
+
